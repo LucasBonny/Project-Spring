@@ -1,5 +1,7 @@
 package br.com.gunthercloud.coursejava.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,6 +16,8 @@ public class Order implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "GMT")
     private Instant moment;
 
     @ManyToOne
@@ -38,12 +42,12 @@ public class Order implements Serializable {
         this.id = id;
     }
 
-    public Instant getInstant() {
+    public Instant getMoment() {
         return moment;
     }
 
-    public void setInstant(Instant instant) {
-        this.moment = instant;
+    public void setMoment(Instant moment) {
+        this.moment = moment;
     }
     public User getClient() {
         return client;

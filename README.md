@@ -300,6 +300,7 @@ A classe `Order` está associada a classe `User` onde 1 `User` pode ter várias 
 
 ### Ordem de implementação
 
+
 - Entity
 - "To many" association, lazy loading(Carregamento "Preguiçoso"), JsonIgnore
 - Repository
@@ -345,3 +346,50 @@ private List<Order> orders = new ArrayList<>();
 
 > [!IMPORTANT]
 > Ao fazer a associação com o `@ManyToOne`, o banco de dados irá criar uma nova coluna na tabela `tb_order` para armazenar o ID do `User` que está sendo referenciado, mas se caso eu queira saber os pedidos de um determinado `User` precisaremos mapear na classe `User` a referência ao `List<Order> orders` usando o MappedBy informando o nome do atributo `client`.
+
+#### Seed
+
+Após ter criado o domínio de `Order` iremos criar o seed para popular o banco de dados com os dados de exemplo.
+
+```java
+ // injeção de dependência
+@Autowired
+private OrderRepository orderRepository;
+
+// Dados de exemplo
+Order o1 = new Order(null, Instant.parse("2019-06-20T19:53:07Z"), u1);
+Order o2 = new Order(null, Instant.parse("2019-07-21T03:42:10Z"), u2);
+Order o3 = new Order(null, Instant.parse("2019-07-22T15:21:22Z"), u1); 
+
+orderRepository.saveAll(Arrays.asList(o1, o2, o3));
+```
+
+Agora podemos fazer uma requisição GET para a rota `/orders` e ver os dados de exemplo.
+
+![alt text](assets/image-5.png)
+
+Como podemos ver, os dados de order foram criados com sucesso, mas ao fazer a requisição GET para a rota `/users` ou `/orders` iremos ver os dados em loop. Isso acontece pois a associação foi feita solicitando os dados em ambos os lados. E para resolver isso iremos utilizar o `@JsonIgnore` para evitar a serialização dos dados.
+
+```java
+//Arquivo: User.java
+@OneToMany(mappedBy = "client")
+@JsonIgnore
+private List<Order> orders = new ArrayList<>();
+```
+![alt text](assets/image-6.png)
+
+Agora podemos ver que os dados veio corretamente.
+
+O lado "para muitos" (`To Many`) não buscará os dados por padrão devido ao carregamento preguiçoso (lazy loading). O processo de serialização, realizado pelo Jackson, não irá automaticamente acionar o banco de dados para buscar esses dados adicionais caso a sessão já tenha sido fechada. Para permitir que esses dados sejam buscados durante a serialização, podemos utilizar a configuração abaixo:
+
+```properties
+spring.jpa.open-in-view=true
+```
+Se essa configuração for desabilitada, a sessão do banco de dados será encerrada antes da serialização, e acessar os dados adicionais resultará em uma exceção.
+
+Para garantir que o meu Instant seja serializado com o formato ISO 8601, iremos utilizar a seguinte configuração:
+
+```java
+@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "GMT")
+private Instant moment;
+```
