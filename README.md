@@ -13,7 +13,7 @@ Nesse primeiro projeto spring iremos aprender a utilizar o Spring Boot para faze
 O conteúdo deste projeto foi retirado do curso `Java COMPLETO Programação Orientada a Objetos + Projetos`
  do _Nélio Alves_ na [Udemy](https://www.udemy.com/course/java-curso-completo/).
  
- A escrita desse documento foi feita por [Lucas Bonny](https://github.com/lucasbonny) e está de acordo com o material disponibilizado pelo professor.
+A escrita desse documento foi feita por [Lucas Bonny](https://github.com/lucasbonny) para futuras consultas, e esse projeto está de acordo com o material disponibilizado pelo professor.
 
 ## Criação do projeto com Spring Boot
 
@@ -185,7 +185,7 @@ Agora iremos verificar se o banco de dados foi criado com sucesso, para isso ire
 
 Ao entrar iremos ver a seguinte tela:
 
-![alt text](image.png)
+![alt text](assets/image.png)
 
 Implementação do banco de dados H2 foi concluida com sucesso!
 
@@ -230,14 +230,14 @@ public class TestConfig implements CommandLineRunner {
 ```
 ### Resultado:
 
-![result](image-1.png)
+![result](assets/image-1.png)
 
 
 ## Implementação do UserService e delegação de responsabilidades
 
 Iremos seguir o fluxo de implementação do `UserService` conforme o diagrama abaixo:
 
-![alt text](image-2.png)
+![alt text](assets/image-2.png)
 
 Devemos separar as responsabilidades para facilitar a manutenção do projeto. A classe `UserResource` irá receber as requisções e enviar as respostas para o `UserService`, já o `UserService` é responsável pela regra de negócio, e o `UserRepository` irá fazer o acesso ao banco de dados.
 
@@ -286,9 +286,62 @@ public class UserResource {
 ```
 ### Resultado:
 
-![result](image-3.png)
+![result](assets/image-3.png)
 
 > [!IMPORTANT]
 > Para que a injeção de dependência funcione devemos registrar a classe `UserService` como um componente do Spring, utilizando a anotação `@Service` ou `@Component`.
 > já na classe `UserRepository` se torna opcional pois ele estende a interface `JpaRepository` que já está registrado como um componente do Spring.
 
+## Classe Order
+
+![alt text](assets/image-4.png)
+
+A classe `Order` está associada a classe `User` onde 1 `User` pode ter várias `Order` e 1 `Order` pode ter 1 `User`, então iremos criar uma classe chamada `Order` e fazer a associação.
+
+### Ordem de implementação
+
+- Entity
+- "To many" association, lazy loading(Carregamento "Preguiçoso"), JsonIgnore
+- Repository
+- Seed
+- Service
+- Resource
+
+> [!TIP]
+> As coleções é criado somente o Getter sem o Setter.
+
+```java
+@Entity
+@Table(name = "tb_order")
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private Date moment;
+    @ManyToOne
+    @JoinColumn(name = "client_id")
+    private User client;
+    public Order() {
+    }
+    public Order(Long id, Date moment, User client) {
+        this.id = id;
+        this.moment = moment;
+        this.client = client;
+    }
+    // getters and setters
+}
+```
+
+> [!TIP] 
+> As coleções deverão ser instanciadas com `new ArrayList<>()` para seu uso.
+
+Utilizando a anotação `@ManyToOne`, indicamos que o atributo `client` é uma chave estrangeira da tabela `tb_order`, referenciando a tabela `tb_client`.
+
+```java
+//Arquivo: User.java
+@OneToMany(mappedBy = "client")
+private List<Order> orders = new ArrayList<>();
+```
+
+> [!IMPORTANT]
+> Ao fazer a associação com o `@ManyToOne`, o banco de dados irá criar uma nova coluna na tabela `tb_order` para armazenar o ID do `User` que está sendo referenciado, mas se caso eu queira saber os pedidos de um determinado `User` precisaremos mapear na classe `User` a referência ao `List<Order> orders` usando o MappedBy informando o nome do atributo `client`.
