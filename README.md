@@ -80,7 +80,7 @@ public class User implements Serializable {
 
 ### Implementação do Resource
 
-Para a implementação testar a entidade iremos criar um pacote chamado `resource`, e dentro dele iremos criar uma classe chamada `UserResource` e com isso podemos comecar a fazer a implementação do recurso web.
+Para a implementação testar a entidade iremos criar um pacote chamado `resource`, e dentro dele iremos criar uma classe chamada `UserResource` e com isso podemos começar a fazer a implementação do recurso web.
 
 #### Modelo seguido na criação do recurso web:
 
@@ -191,7 +191,7 @@ Implementação do banco de dados H2 foi concluida com sucesso!
 
 ## Implementação do UserRepository
 
-Iremos criar um pacote chamado `repositories` e dentro dele iremos criar uma interface chamada `UserRepository` e com isso podemos comecar a fazer a implementação.
+Iremos criar um pacote chamado `repositories` e dentro dele iremos criar uma interface chamada `UserRepository` e com isso podemos começar a fazer a implementação.
 
 ```java
 //JpaRepository<Tipo da entidade, Tipo do ID>
@@ -201,7 +201,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 ```
 
 > [!TIP]
-> A interface não precisa ser implementada, pois o `Spring Data JPA` já faz isso por padrão.
+> Na classe `UserRepository` se torna opcional o uso da anotação `@Repository` pois ele estende a interface `JpaRepository` que já está registrado como um componente do Spring.
 
 ## Implementação da classe de configuração de testes
 
@@ -232,4 +232,63 @@ public class TestConfig implements CommandLineRunner {
 
 ![result](image-1.png)
 
-## Implementação do banco de dados PostgresSQL
+
+## Implementação do UserService e delegação de responsabilidades
+
+Iremos seguir o fluxo de implementação do `UserService` conforme o diagrama abaixo:
+
+![alt text](image-2.png)
+
+Devemos separar as responsabilidades para facilitar a manutenção do projeto. A classe `UserResource` irá receber as requisções e enviar as respostas para o `UserService`, já o `UserService` é responsável pela regra de negócio, e o `UserRepository` irá fazer o acesso ao banco de dados.
+
+Agora vamos criar um pacote chamado `services` e dentro dele iremos criar uma classe chamada `UserService` e com isso podemos começar a fazer a implementação.
+
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository repository;
+
+    public List<User> findAll() {
+        return repository.findAll();
+    }
+
+    public User findById(Long id) {
+        Optional<User> obj = repository.findById(id);
+        return obj.get();
+    }
+}
+```
+
+Agora iremos atualizar a classe `UserResource` para que ele possa retornar os dados do banco de dados para a rota `/users`.
+
+```java
+@RestController
+@RequestMapping(value = "/users")
+public class UserResource {
+
+    @Autowired
+    private UserService service;
+
+    @GetMapping
+    public ResponseEntity<List<User>> findAll() {
+        List<User> list = service.findAll();
+        return ResponseEntity.ok().body(list);
+    }
+
+    @GetMapping(value = "/{id}")
+    public ResponseEntity<User> findById(@PathVariable Long id) {
+        User obj = service.findById(id);
+        return ResponseEntity.ok().body(obj);
+    }
+}
+```
+### Resultado:
+
+![result](image-3.png)
+
+> [!IMPORTANT]
+> Para que a injeção de dependência funcione devemos registrar a classe `UserService` como um componente do Spring, utilizando a anotação `@Service` ou `@Component`.
+> já na classe `UserRepository` se torna opcional pois ele estende a interface `JpaRepository` que já está registrado como um componente do Spring.
+
