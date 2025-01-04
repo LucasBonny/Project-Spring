@@ -2,13 +2,18 @@
 
 ## Introdução
 
-Nesse projeto iremos criar um projeto Spring Boot com as seguintes stacks:
+Nesse primeiro projeto spring iremos aprender a utilizar o Spring Boot para fazer o desenvolvimento de uma aplicação Spring com as seguintes tecnologias:
 
 - Spring Boot
 - Spring Data JPA
 - Spring Web
 - H2
 - PostgreSQL
+
+O conteúdo deste projeto foi retirado do curso `Java COMPLETO Programação Orientada a Objetos + Projetos`
+ do _Nélio Alves_ na [Udemy](https://www.udemy.com/course/java-curso-completo/).
+ 
+ A escrita desse documento foi feita por [Lucas Bonny](https://github.com/lucasbonny) e está de acordo com o material disponibilizado pelo professor.
 
 ## Criação do projeto com Spring Boot
 
@@ -134,7 +139,8 @@ O banco de dados H2 será utilizado para fazer testes na aplicação Spring com 
 Agora iremos ao diretório `src/main/resource/application.properties` e iremos adicionar a seguinte configuração:
 
 ```properties
-spring.profiles.active=test
+# Definindo o perfil de desenvolvimento
+spring.profiles.active=test 
 spring.jpa.open-in-view=true
 ```
 Iremos criar o arquivo `application-test.properties` na mesma pasta e iremos adicionar a seguinte configuração:
@@ -182,5 +188,48 @@ Ao entrar iremos ver a seguinte tela:
 ![alt text](image.png)
 
 Implementação do banco de dados H2 foi concluida com sucesso!
+
+## Implementação do UserRepository
+
+Iremos criar um pacote chamado `repositories` e dentro dele iremos criar uma interface chamada `UserRepository` e com isso podemos comecar a fazer a implementação.
+
+```java
+//JpaRepository<Tipo da entidade, Tipo do ID>
+public interface UserRepository extends JpaRepository<User, Long> {
+
+}
+```
+
+> [!TIP]
+> A interface não precisa ser implementada, pois o `Spring Data JPA` já faz isso por padrão.
+
+## Implementação da classe de configuração de testes
+
+Iremos criar um pacote chamado `config` e dentro dele iremos criar uma classe chamada `TestConfig` e com isso podemos começar a semear o banco de dados.
+
+> [!IMPORTANT]
+> Para semear o banco de dados iremos utilizar o `CommandLineRunner` que irá executar o código ao iniciar o projeto.
+
+```java
+@Configuration
+@Profile("test")
+public class TestConfig implements CommandLineRunner {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public void run(String... args) throws Exception {
+
+        User u1 = new User(null, "Maria Brown", "maria@gmail.com", "988888888", "123456");
+        User u2 = new User(null, "Alex Green", "alex@gmail.com", "977777777", "123456");
+
+        userRepository.saveAll(Arrays.asList(u1, u2));
+    }
+}
+```
+### Resultado:
+
+![result](image-1.png)
 
 ## Implementação do banco de dados PostgresSQL
