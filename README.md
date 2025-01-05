@@ -368,12 +368,12 @@ Agora podemos fazer uma requisição GET para a rota `/orders` e ver os dados de
 
 ![alt text](assets/image-5.png)
 
-Como podemos ver, os dados de order foram criados com sucesso, mas ao fazer a requisição GET para a rota `/users` ou `/orders` iremos ver os dados em loop. Isso acontece pois a associação foi feita solicitando os dados em ambos os lados. E para resolver isso iremos utilizar o `@JsonIgnore` para evitar a serialização dos dados.
+Como podemos ver, os dados de order foram criados com sucesso, mas ao fazer a requisição GET para a rota `/users` ou `/orders` iremos ver os dados em loop. Isso acontece pois a associação foi feita solicitando os dados em ambos os lados. E para resolver isso iremos utilizar o `@JsonIgnore` para evitar a serialização dos dados em um dos lados.
 
 ```java
 //Arquivo: User.java
-@OneToMany(mappedBy = "client")
 @JsonIgnore
+@OneToMany(mappedBy = "client")
 private List<Order> orders = new ArrayList<>();
 ```
 ![alt text](assets/image-6.png)
@@ -393,3 +393,61 @@ Para garantir que o meu Instant seja serializado com o formato ISO 8601, iremos 
 @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "GMT")
 private Instant moment;
 ```
+
+## Implementação do OrderStatus
+
+O OrderStatus é uma Enum, então iremos criar um pacote chamado `entities/enums` e dentro dele iremos criar uma classe chamada `OrderStatus` e com isso podemos iniciar a implementação.
+
+Primeiramente é importante dizer que somente informando os dados da Enum irá dar certo, mas para evitar que os valores futuramente sejam alterados iremos utilizar o construtor privado `private OrderStatus(int code)` e o getter `public int getCode()` para pegar o valor. O atributo `code` é o valor que irá ser utilizado para identificar o status do pedido.
+
+> [!IMPORTANT]
+> Uma Enum por sempre ter valores estáticos poderão ser acessados apenas chamando pela classe sem precisar instantiá-la. 
+
+```java
+public enum OrderStatus {
+    WAITING_PAYMENT(1),
+    PAID(2),
+    SHIPPED(3),
+    DELIVERED(4),
+    CANCELED(5);
+    private int code;
+    private OrderStatus(int code) {
+        this.code = code;
+    }
+    public int getCode() {
+        return code;
+    }
+    public static OrderStatus valueOf(int code) {
+        for(OrderStatus o : OrderStatus.values()) {
+            if(o.getCode() == code) return o;
+        }
+        throw new IllegalArgumentException("Invalid OrderStatus code!");
+    }
+}
+```
+
+> [!TIP]
+> O `valueOf` serve para converter o valor informado para o Enum.
+
+Para lidar com o OrderStatus iremos criar um atributo chamado `orderStatus` do tipo Integer na classe `Order` e criaremos um mapeamento para converter para o exterior o atributo `orderStatus` como o Enum `OrderStatus`.
+
+```java
+private Integer orderStatus;
+
+public Order(Long id, Date moment, OrderStatus orderStatus, User client) {
+    this.id = id;
+    this.moment = moment;
+    this.orderStatus = orderStatus.getCode();
+    this.client = client;
+}
+
+public OrderStatus getOrderStatus() {
+    return OrderStatus.valueOf(orderStatus);
+}
+public void setOrderStatus(OrderStatus orderStatus) {
+    this.orderStatus = orderStatus.getCode();
+}
+```
+
+Dessa forma para o mundo externo iremos trabalhar com o Enum `OrderStatus`, e para a classe `Order` iremos trabalhar com o Integer.
+
