@@ -451,3 +451,34 @@ public void setOrderStatus(OrderStatus orderStatus) {
 
 Dessa forma para o mundo externo iremos trabalhar com o Enum `OrderStatus`, e para a classe `Order` iremos trabalhar com o Integer.
 
+## Implementação do Product
+
+### HashSet
+
+A implementação da entidade Product foi feita com o mesmo padrão de implementação do domínio.
+
+O atributo categories adicionado para a classe Product ele irá representar um coleção, garantindo que "Um produto não possa ter mais de uma ocorrência de uma mesma categoria".
+
+```java
+    Set<Category> categories = new HashSet<>();
+    //A consulta equals está configurada para comparar somente o ID
+    categories.add(new Category(1L, "Electronics"));
+    categories.add(new Category(3L, "Computers"));
+    categories.add(new Category(1L, "Electronics"));
+
+    // como o set não aceita repetição, ele irá ignorar a segunda ocorrencia de "Electronics"
+    // e com isso ele irá retornar apenas 1 ocorrência do mesmo.
+    System.out.println(categories.size()); // 2
+```
+
+> [!IMPORTANT]
+> A consulta do HashSet utiliza o equals para verificar se o elemento já existe na coleção, se o equals retornar true ele irá ignorar a ocorrência.
+
+#### Anotação @Transient
+
+A anotação `@Transient` serve para indicar ao JPA que o atributo `categories` não deverá ser serializado, ou seja, ele irá ser ignorado na hora de fazer a serialização.
+
+```java
+@Transient
+private Set<Category> categories = new HashSet<>();
+```
