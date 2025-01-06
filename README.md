@@ -510,3 +510,82 @@ Agora na classe reversa iremos mapear a associação entre as duas tabelas.
 @ManyToMany(mappedBy = "categories")
 private Set<Product> products = new HashSet<>();
 ```
+
+## Associação de um para muitos com dados extras
+
+
+![alt text](assets/image-7.png)
+
+A relação entre o Order e o Product temos uma associação com OrderItem. Então iremos começar pelo OrderItemPK.
+
+### OrderItemPK
+
+1. Crie o pacote em `entities/pk`
+2. Crie a classe `OrderItemPK` que irá receber as classes `Product` e `Order` que comporão o OrderItem.
+
+> [!TIP]
+> A classe `OrderItemPK` não precisa de construtores.
+
+```java
+@Embeddable
+public class OrderItemPK implements Serializable {
+    @ManyToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
+    @ManyToOne
+    @JoinColumn(name = "product_id")
+    private Product product;
+
+    //Getters e Setters
+
+    //HashCode e Equals
+}
+```
+
+> [!IMPORTANT]
+> O HashCode e Equals devem ser implementados comparando os atributos `order` e `product`.
+
+### OrderItem
+
+1. Crie a classe `OrderItem` no pacote em `entities`.
+2. A classe `OrderItem` irá receber a classe `OrderItemPK` com a anotação `@EmbeddedId`.
+3. Construa a classe `OrderItem` com os atributos `quantity` e `price`.
+4. Criar o mapeamento para a classe.
+
+```java
+@Entity
+@Table(name = "tb_order_item")
+public class OrderItem implements Serializable {
+    @EmbeddedId
+    private OrderItemPK id = new OrderItemPK();
+    private Integer quantity;
+    private Double price;
+    public OrderItem() {
+    }
+    public OrderItem(Order order, Product product, Integer quantity, Double price) {
+        id.setOrder(order);
+        id.setProduct(product);
+        this.quantity = quantity;    
+        this.price = price;
+    }
+
+    public void setOrder(Order order){
+        id.setOrder(order);
+    }
+    public Order getOrder(){
+        return id.getOrder();
+    }
+    public void setProduct(Product product){
+        id.setProduct(product);
+    }
+    public Product getProduct(){
+        return id.getProduct();
+    }
+
+    //HashCode e Equals
+}
+```
+Para implementações externas iremos passar os dados do Order e do Product para o OrderItem e na classe `OrderItemPK` iremos receber esses dados como parâmetro do construtor. 
+
+> [!IMPORTANT]
+> O objeto `OrderItemPK` terá que ser inicializado no atributo para evitar que receba um `NullPointerException`.
