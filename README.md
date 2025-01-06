@@ -482,3 +482,31 @@ A anotação `@Transient` serve para indicar ao JPA que o atributo `categories` 
 @Transient
 private Set<Category> categories = new HashSet<>();
 ```
+
+## Associação de muitos para muitos
+
+### Lado Product
+
+1. Escolher uma classe: `Category` ou `Product` para ter a associação de muitos para muitos.
+2. Dentro da classe vai ter uma coleção `Set` para armazenar as associações.
+3. Criar o mapeamento para a associação.
+
+```java
+//Como o Product irá ter muitas categorias, e o Category irá ter muitos produtos, iremos utilizar o relacionamento muitos para muitos.
+@ManyToMany
+//No JoimColum o name é o nome que irá ser utilizado na tabela de relacionamento que irá receber as duas chaves estrangeiras.
+@JoinTable(name = "tb_product_category", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
+private Set<Category> categories = new HashSet<>();
+```
+
+- O conceito sobre o joinColumns é o mesmo que o @ManyToOne
+- Na classe de Order, o pedido tem um cliente, então iremos utilizar o `@ManyToOne` para indicar que o atributo `client` é uma chave estrangeira da tabela `tb_order`, referenciando a tabela `tb_client`.
+
+### Lado Category
+
+Agora na classe reversa iremos mapear a associação entre as duas tabelas.
+
+```java
+@ManyToMany(mappedBy = "categories")
+private Set<Product> products = new HashSet<>();
+```

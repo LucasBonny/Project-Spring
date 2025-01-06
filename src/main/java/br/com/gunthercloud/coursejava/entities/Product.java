@@ -1,6 +1,7 @@
 package br.com.gunthercloud.coursejava.entities;
 
 import jakarta.persistence.*;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -19,7 +20,9 @@ public class Product implements Serializable {
     private Double price;
     private String imgUrl;
 
-    @Transient
+    @ManyToMany
+    @JoinTable(name = "tb_product_category", joinColumns = @JoinColumn(name = "tb_product"), inverseJoinColumns =
+    @JoinColumn(name = "tb_category"))
     Set<Category> categories = new HashSet<>();
 
     public Product() {
