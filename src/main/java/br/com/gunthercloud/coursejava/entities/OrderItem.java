@@ -1,6 +1,7 @@
 package br.com.gunthercloud.coursejava.entities;
 
 import br.com.gunthercloud.coursejava.entities.pk.OrderItemPK;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -29,6 +30,8 @@ public class OrderItem implements Serializable {
     public void setOrder(Order order){
         id.setOrder(order);
     }
+
+    @JsonIgnore
     public Order getOrder(){
         return id.getOrder();
     }

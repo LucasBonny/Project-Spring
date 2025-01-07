@@ -589,3 +589,44 @@ Para implementações externas iremos passar os dados do Order e do Product para
 
 > [!IMPORTANT]
 > O objeto `OrderItemPK` terá que ser inicializado no atributo para evitar que receba um `NullPointerException`.
+
+### Mapeamento na Classe Order
+
+Primeiro iremos criar uma coleção para armazenar os dados do OrderItem, e pelo fato de ser um `@EmbeddedId`, o OrderItemPK que terá os dados do Order e Product, logo teremos que criar o mapeamento para a associação de outra forma.
+
+```java
+//Como Order está dentro da classe OrderItemPK, iremos colocar o mapeamento para dentro da classe OrderItemPK
+@OneToMany(mappedBy = "id.order")
+private Set<OrderItem> items = new HashSet<>();
+```
+
+Com isso, já podemos semear o banco de dados com os dados de exemplo.
+
+```java
+OrderItem oi1 = new OrderItem(o1, p1, 2, p1.getPrice());
+OrderItem oi2 = new OrderItem(o1, p3, 1, p3.getPrice());
+OrderItem oi3 = new OrderItem(o2, p3, 2, p3.getPrice());
+OrderItem oi4 = new OrderItem(o3, p5, 2, p5.getPrice());
+
+orderItemRepository.saveAll(Arrays.asList(oi1, oi2, oi3, oi4));
+```
+
+E com isso teremos os dados de exemplo na tabela `tb_order_item`.
+
+![alt text](assets/image-8.png)
+
+E o OrderItem irá receber os dados de Product e Order mas iremos utilizar o `@JsonIgnore` na classe `OrderItem` para evitar que retorne os valores já presente na Order o deixando em loop.
+
+> [!TIP]
+> Quando o jackson serializa uma classe ele busca todos os getters e organiza eles em um JSON.
+
+```java
+@JsonIgnore
+public Order getOrder() {
+    return id.getOrder();
+}
+```
+
+Dessa forma ao fazer a requisição GET para a rota `/orders/2` iremos ver os dados de exemplo.
+
+![alt text](assets/image-9.png)
