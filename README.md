@@ -590,7 +590,7 @@ Para implementações externas iremos passar os dados do Order e do Product para
 > [!IMPORTANT]
 > O objeto `OrderItemPK` terá que ser inicializado no atributo para evitar que receba um `NullPointerException`.
 
-### Mapeamento na Classe Order
+## Mapeamento na Classe Order
 
 Primeiro iremos criar uma coleção para armazenar os dados do OrderItem, e pelo fato de ser um `@EmbeddedId`, o OrderItemPK que terá os dados do Order e Product, logo teremos que criar o mapeamento para a associação de outra forma.
 
@@ -630,3 +630,22 @@ public Order getOrder() {
 Dessa forma ao fazer a requisição GET para a rota `/orders/2` iremos ver os dados de exemplo.
 
 ![alt text](assets/image-9.png)
+
+## Associação entre Product e OrderItem
+
+A princípio iremos criar a associação entre Product e OrderItem, e para isso iremos utilizar o `@OneToMany` mas não iremos serializar os dados de OrderItem, pois não será necessário. Então iremos apenas declarar o getter para retornar os dados de OrderItem caso precise utilizar em algum outro momento.
+
+```java
+@OneToMany(mappedBy = "id.product")
+Set<OrderItem> orders = new HashSet<>();
+//...
+@JsonIgnore
+public Set<OrderItem> getOrders() {
+    Set<OrderItem> set = new HashSet<>();
+    for(OrderItem o : orders) {
+        set.add(o);
+    }
+    return set;
+}
+```
+Podemos não ter utilizado em primeiro momento mas se for necessário iremos utilizar chamando o getter `getOrders()` e ele irá percorrer o `Set` e irá retornar os Order relacionados ao `Product` atual.

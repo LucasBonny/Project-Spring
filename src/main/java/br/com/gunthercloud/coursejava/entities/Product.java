@@ -1,7 +1,7 @@
 package br.com.gunthercloud.coursejava.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -24,6 +24,9 @@ public class Product implements Serializable {
     @JoinTable(name = "tb_product_category", joinColumns = @JoinColumn(name = "tb_product"), inverseJoinColumns =
     @JoinColumn(name = "tb_category"))
     Set<Category> categories = new HashSet<>();
+
+    @OneToMany(mappedBy = "id.product")
+    Set<OrderItem> orders = new HashSet<>();
 
     public Product() {
 
@@ -79,6 +82,15 @@ public class Product implements Serializable {
 
     public Set<Category> getCategories() {
         return categories;
+    }
+
+    @JsonIgnore
+    public Set<Order> getOrders() {
+        Set<Order> set = new HashSet<>();
+        for(OrderItem o : orders) {
+            set.add(o.getOrder());
+        }
+        return set;
     }
 
     @Override
