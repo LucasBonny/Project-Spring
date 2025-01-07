@@ -185,7 +185,7 @@ Agora iremos verificar se o banco de dados foi criado com sucesso, para isso ire
 
 Ao entrar iremos ver a seguinte tela:
 
-![alt text](assets/image.png)
+![result](assets/image.png)
 
 Implementação do banco de dados H2 foi concluida com sucesso!
 
@@ -237,11 +237,11 @@ public class TestConfig implements CommandLineRunner {
 
 Iremos seguir o fluxo de implementação do `UserService` conforme o diagrama abaixo:
 
-![alt text](assets/image-2.png)
+![result](assets/image-2.png)
 
 Devemos separar as responsabilidades para facilitar a manutenção do projeto. A classe `UserResource` irá receber as requisções e enviar as respostas para o `UserService`, já o `UserService` é responsável pela regra de negócio, e o `UserRepository` irá fazer o acesso ao banco de dados.
 
-Agora vamos criar um pacote chamado `services` e dentro dele iremos criar uma classe chamada `UserService` e com isso podemos começar a fazer a implementação.
+Agora vamos criar um pacote chamado `services` e dentro dele iremos criar uma classe chamada `UserService` e com isso podemos comenzar a fazer a implementação.
 
 ```java
 @Service
@@ -294,7 +294,7 @@ public class UserResource {
 
 ## Classe Order
 
-![alt text](assets/image-4.png)
+![result](assets/image-4.png)
 
 A classe `Order` está associada a classe `User` onde 1 `User` pode ter várias `Order` e 1 `Order` pode ter 1 `User`, então iremos criar uma classe chamada `Order` e fazer a associação.
 
@@ -366,7 +366,7 @@ orderRepository.saveAll(Arrays.asList(o1, o2, o3));
 
 Agora podemos fazer uma requisição GET para a rota `/orders` e ver os dados de exemplo.
 
-![alt text](assets/image-5.png)
+![result](assets/image-5.png)
 
 Como podemos ver, os dados de order foram criados com sucesso, mas ao fazer a requisição GET para a rota `/users` ou `/orders` iremos ver os dados em loop. Isso acontece pois a associação foi feita solicitando os dados em ambos os lados. E para resolver isso iremos utilizar o `@JsonIgnore` para evitar a serialização dos dados em um dos lados.
 
@@ -376,7 +376,7 @@ Como podemos ver, os dados de order foram criados com sucesso, mas ao fazer a re
 @OneToMany(mappedBy = "client")
 private List<Order> orders = new ArrayList<>();
 ```
-![alt text](assets/image-6.png)
+![result](assets/image-6.png)
 
 Agora podemos ver que os dados veio corretamente.
 
@@ -514,7 +514,7 @@ private Set<Product> products = new HashSet<>();
 ## Associação de um para muitos com dados extras
 
 
-![alt text](assets/image-7.png)
+![result](assets/image-7.png)
 
 A relação entre o Order e o Product temos uma associação com OrderItem. Então iremos começar pelo OrderItemPK.
 
@@ -613,7 +613,7 @@ orderItemRepository.saveAll(Arrays.asList(oi1, oi2, oi3, oi4));
 
 E com isso teremos os dados de exemplo na tabela `tb_order_item`.
 
-![alt text](assets/image-8.png)
+![result](assets/image-8.png)
 
 E o OrderItem irá receber os dados de Product e Order mas iremos utilizar o `@JsonIgnore` na classe `OrderItem` para evitar que retorne os valores já presente na Order o deixando em loop.
 
@@ -629,7 +629,7 @@ public Order getOrder() {
 
 Dessa forma ao fazer a requisição GET para a rota `/orders/2` iremos ver os dados de exemplo.
 
-![alt text](assets/image-9.png)
+![result](assets/image-9.png)
 
 ## Associação entre Product e OrderItem
 
@@ -649,3 +649,41 @@ public Set<OrderItem> getOrders() {
 }
 ```
 Podemos não ter utilizado em primeiro momento mas se for necessário iremos utilizar chamando o getter `getOrders()` e ele irá percorrer o `Set` e irá retornar os Order relacionados ao `Product` atual.
+
+## Associação um para um
+
+![result](assets/image-10.png)
+
+O pagamento está associado ao pedido, então podemos ver que um pedido pode ter 0 ou 1 pagamento, logo conseguimos indentificar quem é a classe dependente.
+
+```java
+// Lado Order
+@OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+private Payment payment;
+```
+
+E o pagamento tem apenas 1 pedido.
+
+```java
+// Lado Payment
+@ManyToOne
+@MapsId
+private Order order;
+```
+
+Nessa associação estamos mapeando as duas entidades para que ambas tenham o mesmo ID, e com a relação de 1 para 1 devemos colocar o cascade para que o pagamento seja deletado junto com o pedido.
+
+### Semeando no banco
+
+```java
+    Order o1 = new Order(null, Instant.parse("2019-06-20T19:53:07Z"), OrderStatus.PAID, u1);
+
+    Payment pay1 = new Payment(null, Instant.parse("2019-06-20T21:53:07Z"), o1);
+    o1.setPayment(pay1);
+
+    orderRepository.save(o1);
+```
+
+#### Resultado no banco de dados
+
+![result](assets/image-11.png)
