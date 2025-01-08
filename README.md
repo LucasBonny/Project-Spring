@@ -741,7 +741,7 @@ Inclui o próprio objeto criado, geralmente no formato JSON (ou outro formato co
 
 Nesse método iremos pegar o `User` que vem no corpo da requisição e irá passar como parâmetro do método `insert` que irá salvar o `User` no banco de dados, e depois irá retornar a URI da requisição com o `id` do `User` que acabou de ser salvo no banco.
 
-Como eu quero que os dados inseridos vá para o banco de dados, iremos utilizar o `@RequestBody` para desserializar os dados do corpo da requisição.
+Como eu quero que os dados inseridos no corpo da requisição vá para o banco de dados, iremos utilizar o `@RequestBody` para desserializar os dados do JSON para o objeto `User`.
 
 Estou recebendo no `obj` o resultado do `service.insert(obj)` que salvou o `User` no banco de dados.
 
@@ -750,8 +750,8 @@ E por fim iremos utilizar o `ServletUriComponentsBuilder` para retornar a URI da
 ### Status das requisições
 
 - 200 OK - Usado para sucesso na requisição
-    
 - 201 Created - Usado para criações de recursos
+- 204 No Content - Usado para exclusões de recursos
 
 ### Resultado da requisição
 
@@ -777,4 +777,47 @@ public void delete(Long id) {
 ```
 Apenas com isso iremos deletar o `User` no banco de dados.
 
-![alt text](assets/image-13.png)
+![result](assets/image-13.png)
+
+## Atualização de User no banco de dados
+
+Para atualizar um `User` no banco de dados iremos criar um endpoint para atualizar um `User` pelo `{id}` usando o `@PutMapping`.
+```java
+@PutMapping(value = "/{id}")
+public ResponseEntity<User> update(@PathVariable Long id, @RequestBody User obj) {
+    obj = service.update(id, obj);
+    return ResponseEntity.ok().body(obj);
+}
+```
+
+Esse endpoint chama o `service.update(id, obj)` para atualizar o `User` no banco de dados.
+
+```java
+public User update(Long id, User obj) {
+    User entity = repository.getReferenceById(id);
+    updateData(entity, obj);
+    return repository.save(entity);
+}
+private void updateData(User entity, User obj) {
+    entity.setName(obj.getName());
+    entity.setEmail(obj.getEmail());
+    entity.setPhone(obj.getPhone());
+}
+```
+
+### Resultado da requisição
+
+Requisição **GET** para `/users/1`
+```json
+{
+    "id": 1,
+    "name": "Maria Brown",
+    "email": "maria@gmail.com",
+    "phone": "988888888",
+    "password": "123456"
+}
+```
+
+Requisição **PUT** para `/users/1` com o retorno da requisição.
+
+![result](assets/image-14.png)
