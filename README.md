@@ -687,3 +687,72 @@ Nessa associação estamos mapeando as duas entidades para que ambas tenham o me
 #### Resultado no banco de dados
 
 ![result](assets/image-11.png)
+
+## Inserção de User no banco de dados
+
+Primeiro iremos criar no `UserService` um método para inserir um `User` no banco de dados e retorne o `User` criado.
+
+```java
+public User insert(User obj) {
+    //chamando o save para salvar o objeto no banco de dados
+    return repository.save(obj);
+}
+```
+
+Agora vamos no `UserResource` configurar o endpoint para inserção de `User`.
+
+```java
+@PostMapping
+public ResponseEntity<User> insert(@RequestBody User obj) {
+    obj = service.insert(obj);
+    URI uri = ServletUriComponentsBuilder.fromCurrentRequest()
+    .path("/{id}").buildAndExpand(obj.getId()).toUri();
+    return ResponseEntity.created(uri).body(obj);
+}
+```
+### Explicação da URI
+1. **ServletUriComponentsBuilder.fromCurrentRequest()**
+
+    - Obtém a URI base da requisição atual (por exemplo, `http://example.com/resource`).
+2. **.path("/{id}")**
+
+    - Acrescenta um segmento de caminho ao final da URI base. O `{id}` aqui é um placeholder que será substituído por um valor real.
+3. **.buildAndExpand(obj.getId())**
+
+    - Substitui o placeholder `{id}` pelo valor retornado por `obj.getId()`. Por exemplo, se `obj.getId()` retorna `123`, o `{id}` será substituído por `123`.
+4. **.toUri()**
+
+    - Converte a URI final para um objeto do tipo `URI`.
+
+### Retorno da requisição ResponseEntity
+
+1. **O código de status HTTP 201 (Created):**
+Indica que um novo recurso foi criado com sucesso.
+
+2. **O cabeçalho `Location`:**
+Contém a URI do novo recurso criado, permitindo ao cliente saber onde ele pode acessar esse recurso.
+
+3. **O corpo da resposta:**
+Inclui o próprio objeto criado, geralmente no formato JSON (ou outro formato configurado pelo Spring para serialização).
+
+### Explicação das anotações
+- `@PostMapping` - Serve para inserir dados no banco de dados.
+- `@RequestBody`- Serve para receber os dados do corpo da requisição no formato JSON e desserializa para o objeto `User`.
+
+Nesse método iremos pegar o `User` que vem no corpo da requisição e irá passar como parâmetro do método `insert` que irá salvar o `User` no banco de dados, e depois irá retornar a URI da requisição com o `id` do `User` que acabou de ser salvo no banco.
+
+Como eu quero que os dados inseridos vá para o banco de dados, iremos utilizar o `@RequestBody` para desserializar os dados do corpo da requisição.
+
+Estou recebendo no `obj` o resultado do `service.insert(obj)` que salvou o `User` no banco de dados.
+
+E por fim iremos utilizar o `ServletUriComponentsBuilder` para retornar a URI da requisição com o `id` do `User` que acabou de ser salvo no banco.
+
+## Status das requisições
+
+- 200 OK - Usado para sucesso na requisição
+    
+- 201 Created - Usado para criações de recursos
+
+### Resultado da requisição
+
+![result](assets/image-12.png)
