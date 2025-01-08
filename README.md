@@ -747,7 +747,7 @@ Estou recebendo no `obj` o resultado do `service.insert(obj)` que salvou o `User
 
 E por fim iremos utilizar o `ServletUriComponentsBuilder` para retornar a URI da requisição com o `id` do `User` que acabou de ser salvo no banco.
 
-## Status das requisições
+### Status das requisições
 
 - 200 OK - Usado para sucesso na requisição
     
@@ -756,3 +756,25 @@ E por fim iremos utilizar o `ServletUriComponentsBuilder` para retornar a URI da
 ### Resultado da requisição
 
 ![result](assets/image-12.png)
+
+## Deleção de User no banco de dados
+
+Para deletar um `User` no banco de dados iremos criar um endpoint para deletar um `User` pelo `{id}`.
+```java
+@DeleteMapping(value = "/{id}")
+public ResponseEntity<Void> delete(@PathVariable Long id) {
+    service.delete(id);
+    return ResponseEntity.noContent().build();
+}
+```
+
+Esse endpoint chama o `service.delete(id)` para deletar o `User` no banco de dados.
+
+```java
+public void delete(Long id) {
+    repository.deleteById(id);
+}
+```
+Apenas com isso iremos deletar o `User` no banco de dados.
+
+![alt text](assets/image-13.png)
