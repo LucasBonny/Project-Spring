@@ -949,3 +949,21 @@ public ResponseEntity<StandardError> databaseError(DatabaseException e, HttpServ
 #### Requisição **DELETE** para `/users/7` retornando: Erro 404 - Resource not found
 
 ![result](assets/image-18.png)
+
+## Tratamento do update
+
+O update vai ser feito de maneira parecida com o delete, iremos tratar o `id` que foi passado para o `update` e se ele for inválido, iremos lançar a exceção `ResourceNotFoundException`.
+
+```java
+public User update(Long id, User obj) {
+    try{
+        User entity = repository.getReferenceById(id);
+        updateData(entity, obj);
+        return repository.save(entity);
+    }
+    catch (EntityNotFoundException e) {
+        throw new ResourceNotFoundException(e.getMessage());
+    }
+}
+```
+![result](assets/image-19.png)
