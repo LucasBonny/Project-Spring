@@ -856,10 +856,11 @@ public User findById(Long id) {
 }
 ```
 
-A `StandardError` é uma classe modelo de erro que será usada para serializar erros em JSON.
+A `StandardError` criada no pacote `resources.exceptions` é uma classe modelo de erro que será usada para serializar erros em JSON.
 
 ```java
-public class StandardError {
+public class StandardError implements Serializable {
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss'Z'", timezone = "GMT")
     private Long timestamp;
     private Integer status;
     private String error;
@@ -867,7 +868,7 @@ public class StandardError {
     private String path;
 }
 ```
-E por ultimo a classe `ResourceExceptionHandler` que irá ficar responsável de capturar e tratar as exceções.
+E por ultimo a classe `ResourceExceptionHandler` no pacote `resources.exceptions` que irá ficar responsável de capturar e tratar as exceções.
 
 
 O `@ControllerAdvice` é um componente que é associado a todos os controladores do Spring Boot e ele interceptará e tratará as exceções que forem lançadas nos controladores.
@@ -887,8 +888,64 @@ public class ResourceExceptionHandler {
 }
 ```
 
-
-
 ### Resultado
 
 ![result](assets/image-16.png)
+
+## Tratamento do deleteById
+
+O processo de tratamento do `deleteById` vai ser feito por partes, devemos tratar cada exceção que possa ser lançada.
+A primeira exceção que podemos ver de cara seria deletar um `User` não presente no banco de dados, isso acontece pois o `id` que foi passado para o `deleteById` era inválido. e com isso ele irá lançar a exceção `ResourceNotFoundException` que foi criada para tratar esse erro.
+Após várias tentativas de tratar essa exceção, cheguei a uma que solucionou o problema! Fora do bloco try ele irá verificar se o `id` que foi passado para o `deleteById` é válido, se ele for válido ele irá entrar no bloco try.
+
+```java
+public void delete(Long id) {
+    //Ambas as linhas abaixo irão lancar a mesma exceção
+    //repository.findById(id).orElseThrow(() -> new ResourceNotFoundException(id));
+    if(repository.findById(id).isEmpty()) throw new ResourceNotFoundException(id);
+    
+    try {
+        repository.deleteById(id);
+    }
+    catch(DataIntegrityViolationException e) {
+        throw new DatabaseException(e.getMessage());
+    }
+    catch(RuntimeException e) {
+        throw new RuntimeException("Unknown error");
+    }
+}
+
+```
+
+A exceção `DatabaseException` foi criada para tratar o erro de integridade referencial, ou seja, quando o `id` que foi passado para o `deleteById` estiver relacionado com outra tabela no banco de dados.
+
+```java
+public class DatabaseException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+    public DatabaseException(String msg) {
+        super(msg);
+    }
+}
+```
+
+Após ter feito esse tratamento, iremos configurar o `@ExceptionHandler` para tratar essa exceção.
+
+```java
+@ExceptionHandler(DatabaseException.class)
+public ResponseEntity<StandardError> databaseError(DatabaseException e, HttpServletRequest request) {
+    String error = "Database error";
+    HttpStatus status = HttpStatus.BAD_REQUEST;
+    StandardError err = new StandardError(Instant.now(), status.value(), error, e.getMessage(), request.getRequestURI());
+    return ResponseEntity.status(status).body(err);
+}
+```
+
+### Resultado
+
+#### Requisição **DELETE** para `/users/2` retornando: Erro 400 - Database error
+
+![result](assets/image-17.png)
+
+#### Requisição **DELETE** para `/users/7` retornando: Erro 404 - Resource not found
+
+![result](assets/image-18.png)

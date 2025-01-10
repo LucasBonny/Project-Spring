@@ -2,7 +2,6 @@ package br.com.gunthercloud.coursejava.entities;
 
 import br.com.gunthercloud.coursejava.entities.enums.OrderStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.io.Serializable;

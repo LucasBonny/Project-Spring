@@ -1,7 +1,6 @@
 package br.com.gunthercloud.coursejava.resources;
 
 import br.com.gunthercloud.coursejava.entities.Product;
-import br.com.gunthercloud.coursejava.repositories.ProductRepository;
 import br.com.gunthercloud.coursejava.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

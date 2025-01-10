@@ -1,9 +1,7 @@
 package br.com.gunthercloud.coursejava.services;
 
 import br.com.gunthercloud.coursejava.entities.Category;
-import br.com.gunthercloud.coursejava.entities.Order;
 import br.com.gunthercloud.coursejava.repositories.CategoryRepository;
-import br.com.gunthercloud.coursejava.repositories.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
