@@ -821,3 +821,74 @@ Requisição **GET** para `/users/1`
 Requisição **PUT** para `/users/1` com o retorno da requisição.
 
 ![result](assets/image-14.png)
+
+
+## Tratamento do findById
+
+![result](assets/image-15.png)
+
+O processo do tratamento do `findById` pode ser um pouco complicado de entender, mas iremos seguir o fluxo de implementação adequado.
+
+### Explicação do fluxo
+
+Verificar se o `id` existe no banco de dados, se existir, iremos retornar o `User` mas se o `id` não estiver presente no banco de dados, iremos lançar uma exceção chamada `ResourceNotFoundException` que foi criada para tratar esse erro.
+
+### Implementação
+
+Iremos criar uma classe no diretório `services.exceptions` chamada `ResourceNotFoundException` que irá extender a classe `RuntimeException` e iremos adicionar um construtor fazendo um super que recebe uma mensagem de erro com o `id` que foi passado para o `ResourceNotFoundException` e iremos retornar essa mensagem.
+
+```java
+public class ResourceNotFoundException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+    public ResourceNotFoundException(Object id) {
+        super("Resource not found. Id " + id);
+    }
+}
+```
+
+Agora iremos alterar o `findById` no `UserService` para enviar uma exceção caso o `id` seja inválido utilizando o `orElseThrow`.
+
+```java
+//Arquivo: UserService
+public User findById(Long id) {
+    Optional<User> obj = repository.findById(id);
+    return obj.orElseThrow(() -> new ResourceNotFoundException(id));
+}
+```
+
+A `StandardError` é uma classe modelo de erro que será usada para serializar erros em JSON.
+
+```java
+public class StandardError {
+    private Long timestamp;
+    private Integer status;
+    private String error;
+    private String message;
+    private String path;
+}
+```
+E por ultimo a classe `ResourceExceptionHandler` que irá ficar responsável de capturar e tratar as exceções.
+
+
+O `@ControllerAdvice` é um componente que é associado a todos os controladores do Spring Boot e ele interceptará e tratará as exceções que forem lançadas nos controladores.
+
+O `@ExceptionHandler(ResourceNotFoundException.class)` serve para dizer ao spring que iremos tratar essa exceção especificamente com a função `resourceNotFound`.
+
+```java
+@ControllerAdvice
+public class ResourceExceptionHandler {
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<StandardError> resourceNotFound(ResourceNotFoundException e, HttpServletRequest request) {
+        String error = "Resource not found";
+        HttpStatus status = HttpStatus.NOT_FOUND;
+        StandardError err = new StandardError(Instant.now(), status.value(), error, e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(err);
+    }
+}
+```
+
+
+
+### Resultado
+
+![result](assets/image-16.png)

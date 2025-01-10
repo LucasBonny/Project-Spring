@@ -2,6 +2,7 @@ package br.com.gunthercloud.coursejava.services;
 
 import br.com.gunthercloud.coursejava.entities.User;
 import br.com.gunthercloud.coursejava.repositories.UserRepository;
+import br.com.gunthercloud.coursejava.services.exceptions.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,7 @@ public class UserService {
 
     public User findById(Long id) {
         Optional<User> user = repository.findById(id);
-        return user.get();
+        return user.orElseThrow(() -> new ResourceNotFoundException(id));
     }
     public User insert(User obj) {
         return repository.save(obj);
