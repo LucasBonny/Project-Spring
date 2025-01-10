@@ -1001,3 +1001,17 @@ No arquivo `application.properties` iremos alterar o perfil:
 ```properties
 spring.profiles.active=dev
 ```
+
+## Pegar o SQL do banco de dados local
+
+PgAdmin: get SQL script:
+- Select database
+- Tools -> Backup
+    - Format: Plain
+    - Encoding: UTF8
+    - Dump options:
+        - Only schema: YES
+        - Blobs: NO
+        - Do not save: (ALL)
+        - Verbose messages: NO
+- Delete instructions before CREATE statements 
