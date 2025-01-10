@@ -967,3 +967,37 @@ public User update(Long id, User obj) {
 }
 ```
 ![result](assets/image-19.png)
+
+## Perfil de desenvolvimento
+
+Vamos criar um perfil de desenvolvimento para o nosso projeto, e para começar iremos criar um banco de dados para o perfil de desenvolvimento no postgresql.
+
+Após criar o banco de dados iremos adicionar a seguinte dependência ao pom.xml
+
+```xml
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+Agora iremos criar um arquivo chamado `application-dev.properties` e dentro dele iremos adicionar as seguintes configurações:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/workshop
+spring.datasource.username=postgres
+spring.datasource.password=1234567
+spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+jwt.secret=MYJWTSECRET
+jwt.expiration=3600000
+```
+
+No arquivo `application.properties` iremos alterar o perfil:
+
+```properties
+spring.profiles.active=dev
+```
