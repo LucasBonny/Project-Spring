@@ -28,21 +28,21 @@ Para a criação do projeto iremos utilizar o [Spring Initializr](https://start.
 
 - Spring Web
 
-Vamos seguir um modelo de domínio, onde iremos criar um recurso web para acessar os domínios e um banco de dados para manter a persistência dos dados.
+Vamos seguir um de arquitetura de camadas, onde iremos criar os pacotes e classes para a implementação da entidade.
 
-## Criação de um modelo de domínio
+## Criação de um modelo de camadas
 
-Iremos criar a entidade para respeitar o fluxo do modelo na arquitetura do projeto.
+Iremos criar a entidade para respeitar o fluxo do modelo da arquitetura do projeto.
 
-- Entidade do domínio
-- Repository
-- Service
-- Resource
+- Entidade
+- Repository - camada de acesso aos dados
+- Service - camada de regra de negócio
+- Resource - camada de requisição web
 
 
 ### Implementação da entidade
 
-Para a implementação da entidade iremos criar um pacote chamado `entity`, e dentro dele iremos criar uma classe chamada `User` e com isso podemos começar a fazer a implementação do domínio.
+Para a implementação da entidade iremos criar um pacote chamado `entity`, e dentro dele iremos criar uma classe chamada `User` e com isso podemos começar a fazer a implementação.
 
 #### Modelo seguido na criação da entidade:
 
@@ -136,11 +136,11 @@ O banco de dados H2 será utilizado para fazer testes na aplicação Spring com 
 
 ### Configurando um perfil de testes no projeto
 
-Agora iremos ao diretório `src/main/resource/application.properties` e iremos adicionar a seguinte configuração:
+Agora iremos ao diretório `src.main.resource.application.properties` e iremos adicionar a seguinte configuração:
 
 ```properties
 # Definindo o perfil de desenvolvimento
-spring.profiles.active=test 
+spring.profiles.active=test
 spring.jpa.open-in-view=true
 ```
 Iremos criar o arquivo `application-test.properties` na mesma pasta e iremos adicionar a seguinte configuração:
@@ -163,7 +163,7 @@ spring.jpa.properties.hibernate.format_sql=true
 ```
 ### Mapeamento da entidade para o banco de dados
 
-Agora iremos mapear a entidade User para instruir o JPA de como ele vai converter os objetos para o modelo relacional, e como fazemos isso? Iremos entrar na entidade User e iremos adicionar as seguintes anotações:
+Agora iremos mapear a entidade User para instruir o JPA de como ele vai converter os atributos para o modelo relacional, e como fazemos isso? Iremos entrar na entidade User e iremos adicionar as seguintes anotações:
 
 ```java
 @Entity 
@@ -201,7 +201,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 ```
 
 > [!TIP]
-> Na classe `UserRepository` se torna opcional o uso da anotação `@Repository` pois ele estende a interface `JpaRepository` que já está registrado como um componente do Spring.
+> Na interface `UserRepository` se torna opcional o uso da anotação `@Repository` pois ele estende a interface `JpaRepository` que já está registrado como um componente do Spring.
 
 ## Implementação da classe de configuração de testes
 
@@ -241,7 +241,7 @@ Iremos seguir o fluxo de implementação do `UserService` conforme o diagrama ab
 
 Devemos separar as responsabilidades para facilitar a manutenção do projeto. A classe `UserResource` irá receber as requisções e enviar as respostas para o `UserService`, já o `UserService` é responsável pela regra de negócio, e o `UserRepository` irá fazer o acesso ao banco de dados.
 
-Agora vamos criar um pacote chamado `services` e dentro dele iremos criar uma classe chamada `UserService` e com isso podemos comenzar a fazer a implementação.
+Agora vamos criar um pacote chamado `services` e dentro dele iremos criar uma classe chamada `UserService` e com isso podemos começar a fazer a implementação.
 
 ```java
 @Service
@@ -349,7 +349,7 @@ private List<Order> orders = new ArrayList<>();
 
 #### Seed
 
-Após ter criado o domínio de `Order` iremos criar o seed para popular o banco de dados com os dados de exemplo.
+Após ter criado as camadas de `Order` e `User` iremos criar o seed para popular o banco de dados com os dados de exemplo.
 
 ```java
  // injeção de dependência
@@ -368,7 +368,7 @@ Agora podemos fazer uma requisição GET para a rota `/orders` e ver os dados de
 
 ![result](assets/image-5.png)
 
-Como podemos ver, os dados de order foram criados com sucesso, mas ao fazer a requisição GET para a rota `/users` ou `/orders` iremos ver os dados em loop. Isso acontece pois a associação foi feita solicitando os dados em ambos os lados. E para resolver isso iremos utilizar o `@JsonIgnore` para evitar a serialização dos dados em um dos lados.
+Como podemos ver, os dados de `Order` foram criados com sucesso, mas ao fazer a requisição GET para a rota `/users` ou `/orders` iremos ver os dados em loop. Isso acontece pois a associação foi feita solicitando os dados em ambos os lados. E para resolver isso iremos utilizar o `@JsonIgnore` para evitar a serialização dos dados em um dos lados.
 
 ```java
 //Arquivo: User.java
@@ -396,7 +396,7 @@ private Instant moment;
 
 ## Implementação do OrderStatus
 
-O OrderStatus é uma Enum, então iremos criar um pacote chamado `entities/enums` e dentro dele iremos criar uma classe chamada `OrderStatus` e com isso podemos iniciar a implementação.
+O OrderStatus é uma Enum, então iremos criar um pacote chamado `entities.enums` e dentro dele iremos criar uma classe chamada `OrderStatus` e com isso podemos iniciar a implementação.
 
 Primeiramente é importante dizer que somente informando os dados da Enum irá dar certo, mas para evitar que os valores futuramente sejam alterados iremos utilizar o construtor privado `private OrderStatus(int code)` e o getter `public int getCode()` para pegar o valor. O atributo `code` é o valor que irá ser utilizado para identificar o status do pedido.
 
@@ -455,9 +455,9 @@ Dessa forma para o mundo externo iremos trabalhar com o Enum `OrderStatus`, e pa
 
 ### HashSet
 
-A implementação da entidade Product foi feita com o mesmo padrão de implementação do domínio.
+A implementação da entidade `Product` foi feita com o mesmo padrão de implementação de todas as outras entidades.
 
-O atributo categories adicionado para a classe Product ele irá representar um coleção, garantindo que "Um produto não possa ter mais de uma ocorrência de uma mesma categoria".
+O atributo `categories` adicionado para a classe Product ele irá representar um coleção, garantindo que "Um produto não possa ter mais de uma ocorrência de uma mesma categoria".
 
 ```java
     Set<Category> categories = new HashSet<>();
@@ -494,7 +494,7 @@ private Set<Category> categories = new HashSet<>();
 ```java
 //Como o Product irá ter muitas categorias, e o Category irá ter muitos produtos, iremos utilizar o relacionamento muitos para muitos.
 @ManyToMany
-//No JoimColum o name é o nome que irá ser utilizado na tabela de relacionamento que irá receber as duas chaves estrangeiras.
+//No JoinColumn o name é o nome que irá ser utilizado na tabela de relacionamento que irá receber as duas chaves estrangeiras.
 @JoinTable(name = "tb_product_category", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
 private Set<Category> categories = new HashSet<>();
 ```
@@ -970,7 +970,7 @@ public User update(Long id, User obj) {
 
 ## Perfil de desenvolvimento
 
-Vamos criar um perfil de desenvolvimento para o nosso projeto, e para começar iremos criar um banco de dados para o perfil de desenvolvimento no postgresql.
+Vamos criar um perfil de desenvolvimento para o nosso projeto, e para começar iremos criar um banco de dados para o perfil de desenvolvimento no `PostgreSQL`.
 
 Após criar o banco de dados iremos adicionar a seguinte dependência ao pom.xml
 
@@ -1015,3 +1015,31 @@ PgAdmin: get SQL script:
         - Do not save: (ALL)
         - Verbose messages: NO
 - Delete instructions before CREATE statements 
+
+## Preparando o ambiente de produção
+
+Primeiro passo é criar um `application-prod.properties` e dentro dele iremos adicionar as seguintes configurações:
+
+```properties
+spring.datasource.url=${DATABASE_URL}
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=false
+jwt.secret=${JWT_SECRET}
+jwt.expiration=${JWT_EXPIRATION}
+```
+
+Agora iremos alterar no `application.properties` para utilizar o application-prod.properties:
+
+```properties
+spring.profiles.active=prod
+```
+
+Vamos criar um arquivo na raiz do projeto chamado `system.properties` e dentro dele iremos adicionar as seguintes configurações:
+
+```properties
+java.runtime.version=17
+```
+
+E com isso encerramos o projeto.
+Ass: *@LucasBonny*
